@@ -13,10 +13,8 @@ user_name varchar2(50),
 password varchar2(50),
 status char(1)
 )
-
 -----------------------------------------------------------------------------------------------------------------------------
 Function:-
-
 CREATE OR REPLACE FUNCTION USER_AUTH_FUNC (P_USERNAME IN VARCHAR2,P_PASSWORD IN VARCHAR2)
 RETURN BOOLEAN
 AS
