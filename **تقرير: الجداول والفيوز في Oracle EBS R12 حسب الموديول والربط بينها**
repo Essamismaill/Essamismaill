@@ -1,0 +1,179 @@
+**تقرير: الجداول والفيوز في Oracle EBS R12 حسب الموديول والربط بينها**
+
+### **1. الجداول والفيوز حسب الموديول**
+
+#### **AP (Accounts Payables):**
+- **الجداول (Base Tables):**
+  - AP_INVOICES_ALL
+  - AP_SUPPLIERS
+  - AP_PAYMENT_SCHEDULES_ALL
+  - AP_BATCHES_ALL
+
+- **الفيوز (Views):**
+  - AP_INVOICES_V
+  - AP_SUPPLIERS_V
+  - AP_PAYMENT_SCHEDULES_V
+
+#### **AR (Accounts Receivables):**
+- **الجداول (Base Tables):**
+  - AR_INVOICES_ALL
+  - AR_CASH_RECEIPTS
+  - AR_PAYMENT_SCHEDULES
+  - AR_CUSTOMERS
+
+- **الفيوز (Views):**
+  - AR_CUSTOMER_V
+  - AR_PAYMENT_SCHEDULE_V
+  - AR_RECEIPT_HISTORY_V
+
+#### **GL (General Ledger):**
+- **الجداول (Base Tables):**
+  - GL_JE_HEADERS
+  - GL_JE_LINES
+  - GL_BALANCES
+  - GL_SETS_OF_BOOKS
+
+- **الفيوز (Views):**
+  - GL_BALANCES_V
+  - GL_JE_BATCHES_V
+  - GL_CODE_COMBINATIONS_V
+
+#### **HR (Human Resources):**
+- **الجداول (Base Tables):**
+  - PER_PEOPLE_F
+  - PER_JOBS
+  - PER_POSITIONS
+  - HR_LOCATIONS
+
+- **الفيوز (Views):**
+  - HR_PERSON_V
+  - HR_JOBS_V
+  - HR_POSITION_V
+
+#### **PO (Purchasing):**
+- **الجداول (Base Tables):**
+  - PO_HEADERS_ALL
+  - PO_LINES_ALL
+  - PO_DISTRIBUTIONS_ALL
+  - PO_REQUISITION_HEADERS_ALL
+
+- **الفيوز (Views):**
+  - PO_REQUISITIONS_V
+  - PO_SUPPLIERS_V
+  - PO_DISTRIBUTIONS_V
+
+---
+
+### **2. الربط بين الجداول**
+
+#### **AP (Accounts Payables):**
+1. **ربط فواتير الموردين مع المدفوعات:**
+   - **AP_INVOICES_ALL** (المفتاح الأساسي: INVOICE_ID)
+   - **AP_PAYMENT_SCHEDULES_ALL** (المفتاح الأجنبي: INVOICE_ID)
+   ```sql
+   SELECT *
+   FROM AP_INVOICES_ALL A, AP_PAYMENT_SCHEDULES_ALL B
+   WHERE A.INVOICE_ID = B.INVOICE_ID;
+   ```
+
+2. **ربط الموردين مع تفاصيلهم:**
+   - **AP_SUPPLIERS** (المفتاح الأساسي: SUPPLIER_ID)
+   - **AP_SUPPLIER_SITES_ALL** (المفتاح الأجنبي: SUPPLIER_ID)
+   ```sql
+   SELECT *
+   FROM AP_SUPPLIERS S, AP_SUPPLIER_SITES_ALL SS
+   WHERE S.SUPPLIER_ID = SS.SUPPLIER_ID;
+   ```
+
+#### **AR (Accounts Receivables):**
+1. **ربط الفواتير مع العملاء:**
+   - **AR_INVOICES_ALL** (المفتاح الأساسي: CUSTOMER_ID)
+   - **AR_CUSTOMERS** (المفتاح الأجنبي: CUSTOMER_ID)
+   ```sql
+   SELECT *
+   FROM AR_INVOICES_ALL AI, AR_CUSTOMERS AC
+   WHERE AI.CUSTOMER_ID = AC.CUSTOMER_ID;
+   ```
+
+#### **GL (General Ledger):**
+1. **ربط الحركات المالية مع الخطوط:**
+   - **GL_JE_HEADERS** (المفتاح الأساسي: JE_HEADER_ID)
+   - **GL_JE_LINES** (المفتاح الأجنبي: JE_HEADER_ID)
+   ```sql
+   SELECT *
+   FROM GL_JE_HEADERS H, GL_JE_LINES L
+   WHERE H.JE_HEADER_ID = L.JE_HEADER_ID;
+   ```
+
+#### **HR (Human Resources):**
+1. **ربط الموظفين بالمناصب:**
+   - **PER_PEOPLE_F** (المفتاح الأساسي: PERSON_ID)
+   - **PER_JOBS** (المفتاح الأجنبي: JOB_ID)
+   ```sql
+   SELECT *
+   FROM PER_PEOPLE_F P, PER_JOBS J
+   WHERE P.JOB_ID = J.JOB_ID;
+   ```
+
+2. **ربط الموظفين بالمواقع:**
+   - **PER_PEOPLE_F** (المفتاح الأساسي: LOCATION_ID)
+   - **HR_LOCATIONS** (المفتاح الأجنبي: LOCATION_ID)
+   ```sql
+   SELECT *
+   FROM PER_PEOPLE_F P, HR_LOCATIONS L
+   WHERE P.LOCATION_ID = L.LOCATION_ID;
+   ```
+
+#### **PO (Purchasing):**
+1. **ربط أوامر الشراء مع الخطوط:**
+   - **PO_HEADERS_ALL** (المفتاح الأساسي: PO_HEADER_ID)
+   - **PO_LINES_ALL** (المفتاح الأجنبي: PO_HEADER_ID)
+   ```sql
+   SELECT *
+   FROM PO_HEADERS_ALL H, PO_LINES_ALL L
+   WHERE H.PO_HEADER_ID = L.PO_HEADER_ID;
+   ```
+
+2. **ربط خطوط الشراء بالتوزيعات:**
+   - **PO_LINES_ALL** (المفتاح الأساسي: LINE_ID)
+   - **PO_DISTRIBUTIONS_ALL** (المفتاح الأجنبي: LINE_ID)
+   ```sql
+   SELECT *
+   FROM PO_LINES_ALL L, PO_DISTRIBUTIONS_ALL D
+   WHERE L.LINE_ID = D.LINE_ID;
+   ```
+
+---
+
+### **3. استعلامات مساعدة لاكتشاف الجداول والربط ديناميكيًا**
+
+#### **1. اكتشاف جميع الجداول التي تنتمي لموديول معين:**
+```sql
+SELECT TABLE_NAME
+FROM ALL_TABLES
+WHERE TABLE_NAME LIKE 'AP%' -- استبدل AP بالموديول المطلوب
+ORDER BY TABLE_NAME;
+```
+
+#### **2. اكتشاف جميع الفيوز التي تنتمي لموديول معين:**
+```sql
+SELECT VIEW_NAME
+FROM ALL_VIEWS
+WHERE VIEW_NAME LIKE 'AP%' -- استبدل AP بالموديول المطلوب
+ORDER BY VIEW_NAME;
+```
+
+#### **3. اكتشاف العلاقات بين الجداول:**
+```sql
+SELECT a.table_name, a.constraint_name, a.column_name, c_pk.table_name AS referenced_table, c_pk.column_name AS referenced_column
+FROM all_cons_columns a
+JOIN all_constraints c ON a.owner = c.owner AND a.constraint_name = c.constraint_name
+JOIN all_cons_columns c_pk ON c.r_owner = c_pk.owner AND c.r_constraint_name = c_pk.constraint_name
+WHERE c.constraint_type = 'R'
+AND a.table_name = 'AP_INVOICES_ALL'; -- استبدل AP_INVOICES_ALL بالجدول المطلوب
+```
+
+---
+
+**ملحوظة:** يمكن تحسين التقرير باستخدام أدوات مثل **TOAD** أو **SQL Developer** لإنشاء رسومات بيانية (ERD) توضح العلاقات بشكل بصري. يرجى إعلامي إذا كنت بحاجة إلى تقرير أكثر تفصيلاً أو إلى نموذج Excel.
+
